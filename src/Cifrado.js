@@ -10,7 +10,7 @@ const shiftChar = (ch, shift) => {
     return String.fromCharCode(base + mod);
 };
 
-//Cifrado y todas sus funcioes
+
 export function caesarEncrypt(text, shift = 3) {
     const s = Number.isFinite(Number(shift)) ? Number(shift) : 3;
     let out = '';
@@ -29,7 +29,7 @@ export function caesarDecrypt(text, shift = 3) {
 
 const AsciiShift = (shift) => {
     const n = Number(shift) || 0;
-    const mod = 128;
+    const mod = 256;
     return ((n % mod) + mod) % mod;
 };
 
@@ -38,8 +38,8 @@ export function asciiShiftEncrypt (text, shift = 0) {
     let out = '';
     for (const ch of text) {
         const cp = ch.codePointAt(0);
-        if (cp <= 127){
-            const shifted = (cp + s) % 128;
+        if (cp <= 255){
+            const shifted = (cp + s) % 256;
             out += String.fromCodePoint(shifted);
         } else {
             out += ch;

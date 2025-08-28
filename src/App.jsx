@@ -1,13 +1,11 @@
 import { useState, useRef } from "react";
-import {
-    caesarEncrypt,
-    caesarDecrypt,
-    asciiShiftEncrypt,
-    asciiShiftDecrypt,
-} from "./Cifrado.js";
+import {caesarEncrypt, caesarDecrypt, asciiShiftEncrypt, asciiShiftDecrypt,} from "./Cifrado.js";
 import "./App.css";
 
 export default function App() {
+
+
+    //Lo uso para setear algunos estados que uso en la app
     const [mode, setMode] = useState("cifrar");
     const [method, setMethod] = useState("caesar");
     const [shift, setShift] = useState(3);
@@ -20,18 +18,30 @@ export default function App() {
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
 
+
+    //Esto es para validad el tipo de archivos (esto hay que agregar para doc y xls)
     const onFileChange = (e) => {
         setError("");
         const file = e.target.files?.[0];
         if (!file) return;
+
+        //Aqui se agregan mas ahora solo acepta txt
         if (!file.name.toLowerCase().endsWith(".txt")) {
             setError("Solo archivos .txt :D");
             return;
         }
+
+
+        //Limite de peso (talvez deberiamos quitarlo)
         if (file.size > 1024 * 1024) {
             setError("Demasiado Pesado Infeliz");
             return;
         }
+
+
+        //Lectura del archivo
+        //Hay que modificar esta parte para poder subir otro tipo de archivos
+        //Hay diferentes librerias para poder leer estos documentos averiguas
         const reader = new FileReader();
         reader.onload = () => {
             setFileName(file.name);
@@ -43,6 +53,8 @@ export default function App() {
         reader.readAsText(file, "UTF-8");
     };
 
+
+    //Procesa del texto
     const processText = () => {
         setError("");
         setOutputText("");
@@ -77,11 +89,17 @@ export default function App() {
         }
     };
 
+
+    // Aqui es donde se descarga el archivo TXT
     const downloadResult = () => {
         if (!outputText) return;
+
+        //Nombre del archivo base
         const base = fileName ? fileName.replace(/\.txt$/i, "") : "resultado";
         const suffix = mode === "cifrar" ? "cifrado.txt" : "descifrado.txt";
         const downloadName = base + suffix;
+
+        //Esto es para crear el archivo
         const blob = new Blob([outputText], { type: "text/plain;charset=utf-8" });
         const a = document.createElement("a");
         a.download = downloadName;
@@ -92,6 +110,37 @@ export default function App() {
         a.remove();
     };
 
+    /*
+          const downloadResult = () => {
+          if (!outputText) return;
+
+          const name = fileName || "resultado.txt";
+          const base = name.replace(/\.txt(encriptado)?$/i, "");
+
+          let downloadName;
+          if (mode === "cifrar") {
+            downloadName = `${base}.txtencriptado`;
+          } else {
+            if (/\.txtencriptado$/i.test(name)) {
+              downloadName = `${base}.txt`;
+            } else {
+              downloadName = `${base}.txt`;
+            }
+          }
+
+          const blob = new Blob([outputText], { type: "application/octet-stream" });
+          const a = document.createElement("a");
+          a.download = downloadName;
+          a.href = URL.createObjectURL(blob);
+          document.body.appendChild(a);
+          a.click();
+          URL.revokeObjectURL(a.href);
+          a.remove();
+        };
+
+     */
+
+    //Mas abajo hay que cambiar unas cosas en los inputs de los botone igual porque si no no lo aceptaran los archivos
     const cardCls =
         "rounded-2xl bg-[var(--card)]/50 shadow-md ring-1 ring-white/10";
 
@@ -179,7 +228,7 @@ export default function App() {
                                 placeholder="6"
                             />
                             <p className="text-xs text-[var(--muted)] mt-3 text-center px-4">
-                                Se aplica según el método seleccionado.
+                                Se aplica según el metodo seleccionado.
                             </p>
                         </div>
                     </section>
@@ -192,7 +241,7 @@ export default function App() {
                                     <label className="inline-flex items-center gap-2 text-sm cursor-pointer px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-white/10">
                                         <input
                                             type="file"
-                                            accept=".txt"
+                                            accept=".txt, .txtencriptado"
                                             className="hidden"
                                             ref={fileInputRef}
                                             onClick={(e) => {
