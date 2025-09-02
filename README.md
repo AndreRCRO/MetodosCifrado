@@ -1,12 +1,62 @@
-# React + Vite
+# Proyecto de Sistemas - Métodos de Cifrado
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto implementa diferentes métodos de cifrado de texto con soporte para múltiples formatos de archivo.
 
-Currently, two official plugins are available:
+## 🚀 Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Métodos de Cifrado
+- **César Clásico**: Desplaza letras del alfabeto A-Z
+- **Desplazamiento ASCII**: Afecta todos los caracteres ASCII (símbolos, espacios, saltos de línea)
 
-## Expanding the ESLint configuration
+### Formatos de Archivo Soportados
+- **TXT**: Archivos de texto plano
+- **DOCX**: Documentos de Microsoft Word
+- **PPTX**: Presentaciones de Microsoft PowerPoint
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Características
+- ✅ Carga directa de archivos TXT, DOCX y PPTX
+- ✅ Extracción automática de texto de documentos
+- ✅ Cifrado y descifrado con desplazamiento configurable
+- ✅ Descarga del resultado en el formato original
+- ✅ Interfaz moderna y responsive con Tailwind CSS
+
+## 📦 Instalación
+
+```bash
+npm install
+```
+
+## 🚀 Uso
+
+```bash
+npm run dev
+```
+
+## 💡 Cómo Usar
+
+1. **Selecciona el modo**: Cifrar o Descifrar
+2. **Elige el método**: César clásico o Desplazamiento ASCII
+3. **Configura el desplazamiento**: Número entero (ej: 3, 6, 13)
+4. **Carga un archivo**: Arrastra o selecciona un archivo .txt, .docx o .pptx
+5. **Procesa**: Haz clic en "Cifrar" o "Descifrar"
+6. **Descarga**: Descarga el resultado en el formato original
+
+## 🔧 Dependencias Principales
+
+- `mammoth`: Para extraer texto de archivos DOCX
+- `pptx-parser`: Para extraer texto de archivos PPTX
+- `docx`: Para generar archivos DOCX cifrados
+- `pptxgenjs`: Para generar archivos PPTX cifrados
+
+## 📝 Notas Técnicas
+
+- Los archivos PPTX se dividen automáticamente en múltiples diapositivas si el texto es muy largo
+- Los archivos DOCX mantienen el formato de párrafos
+- Todos los archivos se descargan con el sufijo "_cifrado" o "_descifrado"
+
+## 🎯 Casos de Uso
+
+- **Estudiantes**: Cifrar documentos académicos
+- **Desarrolladores**: Probar métodos de cifrado
+- **Educación**: Aprender sobre criptografía básica
+- **Investigación**: Experimentar con diferentes algoritmos de cifrado

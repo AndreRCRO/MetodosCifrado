@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "docx": "^9.5.1",
+    "mammoth": "^1.10.0",
+    "pptx-parser": "^1.1.7-beta.9",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

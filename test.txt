@@ -1,0 +1,13 @@
+Este es un archivo de prueba para verificar el funcionamiento del cifrado.
+
+Contiene múltiples líneas de texto para probar:
+- Cifrado César
+- Cifrado ASCII
+- Manejo de saltos de línea
+- Caracteres especiales: áéíóú ñ
+
+El programa debería poder:
+1. Cargar este archivo .txt
+2. Cifrarlo usando cualquiera de los métodos
+3. Descargar el resultado cifrado
+4. También debería funcionar con archivos .docx y .pptx

@@ -1,6 +1,12 @@
 import { useState, useRef } from "react";
 import {caesarEncrypt, caesarDecrypt, asciiShiftEncrypt, asciiShiftDecrypt,} from "./Cifrado.js";
 import "./App.css";
+import mammoth from "mammoth";
+import PptxParser from "pptx-parser"; //para recordar en el futuro instale "npm install mammoth pptx-parser"
+// tambien npm install docx y npm install pptxgenjs
+import { Document, Packer, Paragraph } from "docx";
+import PptxGenJS from "pptxgenjs";
+
 
 export default function App() {
 
@@ -20,38 +26,54 @@ export default function App() {
 
 
     //Esto es para validad el tipo de archivos (esto hay que agregar para doc y xls)
-    const onFileChange = (e) => {
-        setError("");
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const onFileChange = async (e) => {
+  setError("");
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-        //Aqui se agregan mas ahora solo acepta txt
-        if (!file.name.toLowerCase().endsWith(".txt")) {
-            setError("Solo archivos .txt :D");
-            return;
-        }
+  const name = file.name.toLowerCase();
 
+  if (!name.endsWith(".txt") && !name.endsWith(".docx") && !name.endsWith(".pptx")) {
+    setError("Solo archivos .txt, .docx o .pptx :D");
+    return;
+  }
 
-        //Limite de peso (talvez deberiamos quitarlo)
-        if (file.size > 1024 * 1024) {
-            setError("Demasiado Pesado Infeliz");
-            return;
-        }
+  try {
+    if (name.endsWith(".txt")) {
+      // TXT directo
+      const content = await file.text();
+      setFileName(file.name);
+      setInputText(content);
+      setOutputText("");
+    } else if (name.endsWith(".docx")) {
+      // DOCX con mammoth
+      const arrayBuffer = await file.arrayBuffer();
+      const { value } = await mammoth.extractRawText({ arrayBuffer });
+      setFileName(file.name);
+      setInputText(value);
+      setOutputText("");
+    } else if (name.endsWith(".pptx")) {
+      // PPTX con pptx-parser
+      const arrayBuffer = await file.arrayBuffer();
+      const parser = new PptxParser();
+      const result = await parser.parse(arrayBuffer);
 
+      // Concatenamos todo el texto de las diapositivas
+      const slidesText = result.slides
+        .map((slide) => slide.content.map((c) => c.text).join(" "))
+        .join("\n\n");
 
-        //Lectura del archivo
-        //Hay que modificar esta parte para poder subir otro tipo de archivos
-        //Hay diferentes librerias para poder leer estos documentos averiguas
-        const reader = new FileReader();
-        reader.onload = () => {
-            setFileName(file.name);
-            setInputText(reader.result || "");
-            setOutputText("");
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        };
-        reader.onerror = () => setError("No se pudo leer el archivo :(");
-        reader.readAsText(file, "UTF-8");
-    };
+      setFileName(file.name);
+      setInputText(slidesText);
+      setOutputText("");
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  } catch (err) {
+    console.error(err);
+    setError("No se pudo leer el archivo :(");
+  }
+};
 
 
     //Procesa del texto
@@ -91,24 +113,78 @@ export default function App() {
 
 
     // Aqui es donde se descarga el archivo TXT
-    const downloadResult = () => {
-        if (!outputText) return;
+    const downloadResult = async () => {
+  if (!outputText) return;
 
-        //Nombre del archivo base
-        const base = fileName ? fileName.replace(/\.txt$/i, "") : "resultado";
-        const suffix = mode === "cifrar" ? "cifrado.txt" : "descifrado.txt";
-        const downloadName = base + suffix;
+  const name = fileName || "resultado";
+  const isCifrar = mode === "cifrar";
 
-        //Esto es para crear el archivo
-        const blob = new Blob([outputText], { type: "text/plain;charset=utf-8" });
-        const a = document.createElement("a");
-        a.download = downloadName;
-        a.href = URL.createObjectURL(blob);
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(a.href);
-        a.remove();
-    };
+  try {
+    setBusy(true);
+    
+    if (name.toLowerCase().endsWith(".txt")) {
+      // TXT
+      const base = name.replace(/\.txt$/i, "");
+      const downloadName = base + (isCifrar ? "_cifrado.txt" : "_descifrado.txt");
+      const blob = new Blob([outputText], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.download = downloadName;
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+
+    } else if (name.toLowerCase().endsWith(".docx")) {
+      // DOCX
+      const doc = new Document({
+        sections: [
+          {
+            children: outputText.split("\n").map((line) => new Paragraph({ text: line })),
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const a = document.createElement("a");
+      a.download = name.replace(/\.docx$/i, isCifrar ? "_cifrado.docx" : "_descifrado.docx");
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+
+    } else if (name.toLowerCase().endsWith(".pptx")) {
+      // PPTX
+      const pptx = new PptxGenJS();
+      
+      // Dividir el texto en diapositivas si es muy largo
+      const lines = outputText.split("\n");
+      const maxLinesPerSlide = 20;
+      
+      for (let i = 0; i < lines.length; i += maxLinesPerSlide) {
+        const slideText = lines.slice(i, i + maxLinesPerSlide).join("\n");
+        const slide = pptx.addSlide();
+        slide.addText(slideText, { 
+          x: 0.5, 
+          y: 0.5, 
+          w: 9, 
+          h: 6.5,
+          fontSize: 14,
+          color: "363636"
+        });
+      }
+      
+      const downloadName = name.replace(/\.pptx$/i, isCifrar ? "_cifrado.pptx" : "_descifrado.pptx");
+      await pptx.writeFile({ fileName: downloadName });
+    }
+  } catch (err) {
+    console.error("Error descargando el archivo:", err);
+    setError("No se pudo generar el archivo de salida: " + err.message);
+  } finally {
+    setBusy(false);
+  }
+};
 
     /*
           const downloadResult = () => {
@@ -241,15 +317,15 @@ export default function App() {
                                     <label className="inline-flex items-center gap-2 text-sm cursor-pointer px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-white/10">
                                         <input
                                             type="file"
-                                            accept=".txt, .txtencriptado"
+                                            accept=".txt, .docx, .pptx"
                                             className="hidden"
                                             ref={fileInputRef}
                                             onClick={(e) => {
                                                 e.target.value = null;
                                             }}
                                             onChange={onFileChange}
-                                        />
-                                        <span>Subir .txt</span>
+                                            />
+                                        <span>Subir archivo</span>
                                     </label>
                                 </div>
                                 {fileName && (
@@ -277,7 +353,7 @@ export default function App() {
                                                 : "bg-white/5 text-slate-400 ring-white/10 cursor-not-allowed"
                                         }`}
                                     >
-                                        Descargar .txt
+                                        Descargar {fileName ? (fileName.toLowerCase().endsWith('.txt') ? '.txt' : fileName.toLowerCase().endsWith('.docx') ? '.docx' : '.pptx') : 'archivo'}
                                     </button>
                                 </div>
                                 <textarea
